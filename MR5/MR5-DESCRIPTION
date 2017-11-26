@@ -1,0 +1,43 @@
+
++--------------------+
+|                    |
+| SUMMARY            |
+|                    |
++--------------------+
+
+A crash-recovery TOF bug can cause the re-launched ApplicationManager (AM) to be terminated and eventually the job is failed due to untimely crash of node during committing.
+
++---------------------------------------------------------+
+|                                                         |
+| DETAILS                                                 |
+|                                                         |
++---------------------------------------------------------+
+
+The MapReduce in hadoop uses a HDFS file as a flag to indicate commit begin so that only one AM attempt can commit the result.
+A task attempt calls commitPending() in AM to inform the application that it's ready to commit its results.
+
+CommitterEventHandler.java (Line 248)
+void handleJobCommit() {
+  touchz("job_id/COMMIT_STARTED");
+  committer.commitJob();
+  touchz("job_id/COMMIT_SUCCESS");
+}
+
+If a task attempt crashed in the middle of "committer.commitJob()", the flag file, "job_id/COMMIT_STARTED", leaves in HDFS system.
+At the same time, the MapReduce system launch a new AM attempt to retry the same job.
+
+MRAppMaster.java (Line 233)
+void serviceInit() {
+  boolean commitStarted = fs.exists("job_id/COMMIT_STARTED");
+  boolean commitSuccess = fs.exists("job_id/COMMIT_SUCCESS");
+  if (commitStarted) {
+    if (commitSuccess) { ...}
+    else {
+      frocedState = JOB.ERROR;
+      ...
+    }
+  }
+}
+
+The re-launched AM checks that flag file and terminates itself since the flag file already exists.
+Thus, the submitted job cannot complete successfully.

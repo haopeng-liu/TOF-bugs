@@ -1,0 +1,18 @@
+
++--------------------+
+|                    |
+| SUMMARY            |
+|                    |
++--------------------+
+
+A crash-recovery TOF bug in HBase similar with HB5, but regionserver crashes right after deleting HLog files directory's znode not HLog files' znodes.
+
+
++---------------------------------------------------------+
+|                                                         |
+| DETAILS                                                 |
+|                                                         |
++---------------------------------------------------------+
+
+Similar with HB5 but the regionserver crashes after deleting HLog file directory's znode in deleteRsQueues, not HLog files' znodes.
+

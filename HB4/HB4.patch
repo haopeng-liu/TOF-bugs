@@ -1,0 +1,12 @@
+--- ./hbase-0.90.1-orig/src/main/java/org/apache/hadoop/hbase/master/AssignmentManager.java	2017-11-25 08:43:32.261133421 -0600
++++ ./hbase-1/src/main/java/org/apache/hadoop/hbase/master/AssignmentManager.java	2017-11-25 16:17:05.282207132 -0600
+@@ -728,7 +728,8 @@
+   public void regionOnline(HRegionInfo regionInfo, HServerInfo serverInfo) {
+     synchronized (this.regionsInTransition) {
+       RegionState rs =
+-        this.regionsInTransition.remove(regionInfo.getEncodedName());
++        //this.regionsInTransition.remove(regionInfo.getEncodedName());
++	null;
+       if (rs != null) {
+         this.regionsInTransition.notifyAll();
+       }

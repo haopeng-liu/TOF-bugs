@@ -1,0 +1,41 @@
+
++--------------------+
+|                    |
+| SUMMARY            |
+|                    |
++--------------------+
+
+A crash-regular bug in MapReduce can causes any RPC calls to hang due to untimely node crash.
+
+
++---------------------------------------------------------+
+|                                                         |
+| DETAILS                                                 |
+|                                                         |
++---------------------------------------------------------+
+
+In MapReduce(Hadoop), RPC client side sends a RPC call request to a remote node (RPC server) and then wait for the reply.
+If the remote node crashes after receiving the request but before sending out reply, RPC client side will be blocked.
+
+This is a discussion and acknowledgement from the developers about this bug: https://issues.apache.org/jira/browse/HADOOP-11252
+It's exactly the MR3 bug
+
+Client.java (Line 1390)
+
+public Writable call(RPC.RpcKind rpcKind, Writable rpcRequest,
+  ConnectionId remoteId, int serviceClass) throws IOException {
+  ...
+  connection.sendRpcRequest(call);  // send the rpc request
+  ...
+  call.wait();   // wait for the result
+}
+
+Client.java (Line 1066)
+
+private void receiveRpcResponse() {
+  ...
+  call.setRpcResponse(value);  //notify is executed inside the callee.
+  ...
+}
+
+Since the wait doesn't have any timeout mechanism, it will be blocked and cannot continue the execution.

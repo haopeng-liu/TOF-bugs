@@ -1,0 +1,57 @@
+
++-----------------------------+
+|                             |
+| SUMMARY                     |
+|                             |
++-----------------------------+
+A crash-regular TOF bug in HBase which causes HMaster hang due to unexpected node crash.
+
+
++-----------------------------+
+|                             |
+| HOW TO INSTALL              |
+|                             |
++-----------------------------+
+
+1. Download hbase-0.90.1 source
+----------------------
+# tar zxvf hbase-0.90.1-orig-src.tar.gz
+
+2. Copy and Deploy two hbase clusters
+----------------------
+# mv hbase-0.90.1-orig-src hbase-1
+# cp -r hbase-1 hbase-2
+
+3. Configure hbase replication
+----------------------
+# cp hbase-config/conf-1/* hbase-1/conf/
+# cp hbase-config/conf-2/* hbase-2/conf/*
+
+4. Prepare data for observation
+----------------------
+# ./data/prepareData.sh
+Note: for simiplicity, we have prepared data at first and stored them in ./data/data-1 and ./data/data-2.
+
+5. Apply the patch
+----------------------
+# cd hbase-1
+# patch -p1 -i HB4.patch
+
+6. Compile
+----------------------
+# hbase-1/compile.sh
+
+
++-----------------------------+
+|                             |
+| Reproduce the bug           |
+|                             |
++-----------------------------+
+1. Run the triggering script
+----------------------
+# ./HB5-trigger.sh
+
+2. Check result
+----------------------
+In the output information of triggering script, it can be found that HMaster hangs and the system cannot start up successfully.
+"Check: Master cluster hbase-1 has completed initialization........................."

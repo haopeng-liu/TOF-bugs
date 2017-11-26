@@ -1,0 +1,46 @@
+
++-----------------------------+
+|                             |
+| SUMMARY		      |
+|			      |
++-----------------------------+
+A crash-recovery TOF bug in MapReduce due to untimely crash during committing pending in reducers.
+
+
++-----------------------------+
+|                             |
+| HOW TO INSTALL	      |
+|			      |
++-----------------------------+
+
+1. Download hadoop source: 
+----------------------
+# ~/MR4/bug-code-svn.sh
+
+2. Apply the patch
+----------------------
+# cd <hadoop_src_dir>
+# patch -p1 i MR4.patch
+
+3. Compile
+----------------------
+# mvn package -Pdist -DskipTests=true -Dtar -Dmaven.javadoc.skip=true
+
+
++-----------------------------+
+|                             |
+| Reproduce the bug	      |
+|			      |
++-----------------------------+
+1. Run the triggering script
+----------------------
+# ./MR4-trigger.sh
+
+2. Check result
+----------------------
+a. Normally, the submitted word count job can finish correctly.
+If the bug is triggered, the job cannot finish and repeatedly launch new reducers.
+
+Check the AM log (syslog):
+INFO [ContainerLauncher #7] org.apache.hadoop.mapreduce.v2.app.launcher.ContainerLauncherImpl: KILLING attempt_1511159047359_0001_r_000000_156
+

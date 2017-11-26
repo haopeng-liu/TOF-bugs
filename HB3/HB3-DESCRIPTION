@@ -1,0 +1,37 @@
+
++--------------------+
+|                    |
+| SUMMARY            |
+|                    |
++--------------------+
+
+A crash-regular TOF bug in HBase which hangs the HMaster startup due to unexpected node crash.
+
+
++---------------------------------------------------------+
+|                                                         |
+| DETAILS                                                 |
+|                                                         |
++---------------------------------------------------------+
+
+This bug happens during the HMaster startup in HBase. 
+After assigning the ROOT region to a live region server, HMaster suspends itself and waits for the assignment complete.
+
+AssignmentManager.java (Line 245)
+boolean processRegionInTransitionAndBlockUntilAssigned(final HRegionInfo hri) {
+  ...
+  this.regionsInTransition.wait();
+  ...
+}
+
+On the other side, after opening the ROOT region, the region server sends a message to notify HMaster. In the message handler, HMaster checks the condition and send the notify to its main thread.
+
+AssignmentManager.java (Line 730)
+void regionOnline(...) {
+  ...
+  this.regionsInTransition.notifyAll();
+  ...
+}
+
+If such message/notification is lost due to network issue or the region server is crashed, the main thread of HMaster will hang and cannot start up as usual.
+

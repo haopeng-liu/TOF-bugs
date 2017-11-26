@@ -1,0 +1,50 @@
+
++-----------------------------+
+|                             |
+| SUMMARY		      |
+|			      |
++-----------------------------+
+A crash-regular TOF bug in MapReduce due to untimely node crash or message lost during a RPC call.
+
+
++-----------------------------+
+|                             |
+| HOW TO INSTALL	      |
+|			      |
++-----------------------------+
+
+1. Download hadoop source: 
+----------------------
+# wget https://archive.apache.org/dist/hadoop/common/hadoop-2.1.0-beta/hadoop-2.1.0-beta-src.tar.gz
+
+2. Apply the patch
+----------------------
+# cd <hadoop_src_dir>
+# patch -p1 i MR3.patch
+
+3. Compile
+----------------------
+# mvn package -Pdist -DskipTests=true -Dtar -Dmaven.javadoc.skip=true
+
+
++-----------------------------+
+|                             |
+| Reproduce the bug	      |
+|			      |
++-----------------------------+
+1. Run the triggering script
+----------------------
+# ./MR3-trigger.sh
+
+2. Check result
+----------------------
+a. Normally, the MapReduce system can start up correctly and ready to run jobs.
+If the bug is triggered, a RPC call from RM to NM will be hanged.
+(In fact, for any RPC call requests from node A to node B, the RPC call will hang if node B crashes after receiving the request.)
+
+Check Mapreduce logs:
+# cd <hadoop_log_dir>
+# grep -r "FCatch" ./
+
+There is a before-wait record: "yarn-fcatch-nodemanager-ubuntu.out:FCatch: enter wait for call 0; localhost/127.0.0.1:8031"
+But the logs do not contain the corresponding after-wait record.

@@ -1,0 +1,50 @@
+
++-----------------------------+
+|                             |
+| SUMMARY		      |
+|			      |
++-----------------------------+
+A crash-recovery TOF bug in MapReduce due to untimely crash during result committing in reducers.
+
+
++-----------------------------+
+|                             |
+| HOW TO INSTALL	      |
+|			      |
++-----------------------------+
+
+1. Download hadoop source: 
+----------------------
+# wget https://archive.apache.org/dist/hadoop/common/hadoop-2.1.0-beta/hadoop-2.1.0-beta-src.tar.gz
+
+2. Apply the patch
+----------------------
+# cd <hadoop_src_dir>
+# patch -p1 i MR5.patch
+
+3. Compile
+----------------------
+# mvn package -Pdist -DskipTests=true -Dtar -Dmaven.javadoc.skip=true
+
+
++-----------------------------+
+|                             |
+| Reproduce the bug	      |
+|			      |
++-----------------------------+
+1. Run the triggering script
+----------------------
+# ./MR5-trigger.sh
+
+2. Check result
+----------------------
+a. Normally, the submitted word count job can finish correctly.
+If the bug is triggered, the job status is failed as is shown by the command "hadoop job -list all" (see MR5-trigger.sh).
+An example:
+Job status:
+                  JobId	     State	     StartTime	    UserName
+ job_1511143235197_0001	    FAILED	 1511143242482	      fcatch
+
+b. Check the AM log (syslog):
+INFO [Thread-2] org.apache.hadoop.mapreduce.v2.app.rm.RMContainerAllocator: Setting job diagnostics to We crashed durring a commit
+

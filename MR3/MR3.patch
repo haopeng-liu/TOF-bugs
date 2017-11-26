@@ -1,0 +1,18 @@
+--- ./hadoop-2.1.0-beta-src-orig/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/ipc/Client.java	2017-11-20 09:23:56.636184184 -0600
++++ ./hadoop-2.1.0-beta-src/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/ipc/Client.java	2017-11-20 10:24:03.780326507 -0600
+@@ -1327,6 +1327,7 @@
+     }
+ 
+     boolean interrupted = false;
++System.out.println("FCatch: enter wait for call " + call.id); 
+     synchronized (call) {
+       while (!call.done) {
+         try {
+@@ -1336,6 +1337,7 @@
+           interrupted = true;
+         }
+       }
++System.out.println("FCatch: exit wait for call " + call.id); 
+ 
+       if (interrupted) {
+         // set the interrupt flag now that we are done waiting

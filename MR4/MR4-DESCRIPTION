@@ -1,0 +1,33 @@
+
++--------------------+
+|                    |
+| SUMMARY            |
+|                    |
++--------------------+
+
+A crash-recovery TOF bug can cause the re-launched task be killed and eventually the job is failed due to untimely crash of reducer node during commitPending.
+
++---------------------------------------------------------+
+|                                                         |
+| DETAILS                                                 |
+|                                                         |
++---------------------------------------------------------+
+
+The MapReduce in hadoop uses a two phase commit protocol to handle a task attempt commit so that it can discard results from an unneeded task attempt.
+A task attempt calls commitPending() in AM to inform the application that it's ready to commit its results.
+
+TaskImpl.java (Line 725)
+public void transition(TaskImpl task, TaskEvent event) {
+  ...
+  if (task.commitAttempt == null) {
+    task.commitAttempt = attemptID;
+  }
+  else {
+    task.eventHandler.handle(new TaskAttemptEvent(attemptID, TaskAttemptEventType.TA_KILL));
+  }
+}
+
+Suppose a task attempt has called commitPending() and set the task.commitAttempt to its ID.
+Then this task attempt crashes before commit finish. The MapReduce system has failure tolerant mechanism to re-launch a new task attempt.
+However, the re-launched task attempt will be killed by AM due to the task.commitAttempt is already not empty.
+Thus, the submitted job cannot complete successfully.

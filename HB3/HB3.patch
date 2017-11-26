@@ -1,0 +1,11 @@
+--- ./hbase-0.90.1-orig/src/main/java/org/apache/hadoop/hbase/master/AssignmentManager.java	2017-11-25 08:29:14.845099591 -0600
++++ ./hbase-1/src/main/java/org/apache/hadoop/hbase/master/AssignmentManager.java	2017-11-25 16:15:11.398202638 -0600
+@@ -730,7 +730,7 @@
+       RegionState rs =
+         this.regionsInTransition.remove(regionInfo.getEncodedName());
+       if (rs != null) {
+-        this.regionsInTransition.notifyAll();
++        //this.regionsInTransition.notifyAll();
+       }
+     }
+     synchronized (this.regions) {

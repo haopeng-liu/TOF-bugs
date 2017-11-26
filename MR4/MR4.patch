@@ -1,0 +1,14 @@
+--- ./hadoop-common-orig/hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-core/src/main/java/org/apache/hadoop/mapred/Task.java	2017-11-19 21:27:43.566488649 -0600
++++ ./hadoop-common/hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-core/src/main/java/org/apache/hadoop/mapred/Task.java	2017-11-19 21:42:14.000000000 -0600
+@@ -986,6 +986,11 @@
+           }
+         }
+       }
++java.io.File tmp = new java.io.File("/tmp/MR4-crash.flag");
++if (tmp.exists()) {
++  tmp.delete();
++  Runtime.getRuntime().halt(0);
++}
+       //wait for commit approval and commit
+       commit(umbilical, reporter, committer);
+     }

@@ -1,0 +1,65 @@
+
++--------------------+
+|                    |
+| SUMMARY            |
+|                    |
++--------------------+
+
+A crash-recovery TOF bug in HBase, that regionserver crashes right after deleting HLog file paths' znodes when it is transferring HLogs, and then the recovery will skip these HLogs since the znodes are already gone.
+
++---------------------------------------------------------+
+|                                                         |
+| DETAILS                                                 |
+|                                                         |
++---------------------------------------------------------+
+
+This is a data-loss bug due to unexpected node crash. If the regionserver does not crash, the following transfer will finish successfully. But when the regionserver crashes right after deleting HLog file path's znode, the recovery will skip these HLogs and produce data-loss problem.
+
+1) In crash part: ReplicationSourceManager.java (line 293)
+
+void transferQueues(string rsZnode){
+  if (lockOtherRS(rsZnode) == false) return;
+  List newQueues = zkHelper.copyQueuesFromRS(rsZnode);
+  zkHelper.deleteRsQueues(rsZnode);
+  if (newQueues == null || newQueues.size() == 0) {
+     return;
+   }
+   
+...//read the copied newQueues and replicate corresponding HLogs to another remote regionserver
+}
+
+ReplicationZookeeper.java (line 599)
+
+ public void deleteRsQueues(String znode) {
+    try {
+      ZKUtil.deleteNodeRecursively(this.zookeeper,
+          ZKUtil.joinZNode(rsZNode, znode));
+    } catch (KeeperException e) {
+      this.abortable.abort("Failed delete of " + znode, e);
+    }   
+  }
+
+ZKUtil.java (line 991)
+
+public static void deleteNodeRecursively(ZooKeeperWatcher zkw, String node)
+  throws KeeperException {
+    try {
+      List<String> children = ZKUtil.listChildrenNoWatch(zkw, node);
+      if(!children.isEmpty()) {
+        for(String child : children) {
+          deleteNodeRecursively(zkw, joinZNode(node, child));
+        }
+      }
+      zkw.getZooKeeper().delete(node, -1);
+    } catch(InterruptedException ie) {
+      zkw.interruptedException(ie);
+    }
+  }
+
+
+When one regionserver transfers HLogs, it will create one lock and copy HLog file paths from their znodes (i.e., copyQueuesFromRS())  to newQueues at first, then it will delete those znodes to avoid repeated transferring. After deletion, the regionserver will read newQueues and transfer HLogs. 
+Note that in deleteNodeRecursively(), it first delete the lock,  then HLog file path znode and finally HLog file directory znode.
+
+In recovery part: same code as crash part
+
+The recovery routine tries to copy HLog file paths from the znodes again. But it will get empty if the regionserver crashes right after deleting HLog file path's znode in deleteRsQueues(). Then it just returns and skips corresponding HLogs.

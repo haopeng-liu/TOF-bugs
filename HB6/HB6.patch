@@ -1,0 +1,39 @@
+--- ./hbase-0.90.1-orig/src/main/java/org/apache/hadoop/hbase/zookeeper/ZKUtil.java	2017-11-24 01:37:25.160715673 -0600
++++ ./hbase-1/src/main/java/org/apache/hadoop/hbase/zookeeper/ZKUtil.java	2017-11-24 01:51:58.592750135 -0600
+@@ -998,6 +998,36 @@
+         }
+       }
+       zkw.getZooKeeper().delete(node, -1);
++      int count = 0;
++      try {
++            java.io.FileReader fileReader = new java.io.FileReader("/tmp/HB6-crash.flag");
++            java.io.BufferedReader bufferedReader = new java.io.BufferedReader(fileReader);
++            String line = bufferedReader.readLine();
++            if(line != null)
++            {
++              count = java.lang.Integer.parseInt(line);
++            }   
++            if(bufferedReader != null) bufferedReader.close();
++           
++            java.io.FileWriter fileWriter = new java.io.FileWriter("/tmp/HB6-crash.flag");
++            java.io.BufferedWriter bufferedWriter = new java.io.BufferedWriter(fileWriter);
++            count ++;
++            LOG.info("[FCatch]Count = "+ count+ ", Delete "+ node);
++            bufferedWriter.write(String.valueOf(count)+"\n");
++            if(count == 3)
++            {
++              if(bufferedWriter != null) bufferedWriter.close();
++              LOG.info("[FCatch]Crash Here After Deleting "+ node);
++              Runtime.getRuntime().halt(0);
++            } 
++           if(bufferedWriter != null) bufferedWriter.close();
++        }
++        catch(java.io.FileNotFoundException ex) {
++           LOG.info("Unable to open file /tmp/HB5-crash.flag");                
++        }
++        catch(IOException ex) {
++            LOG.info("Error reading/writing file /tmp/HB5-crash.flag"); 
++        }
+     } catch(InterruptedException ie) {
+       zkw.interruptedException(ie);
+     }
