@@ -1,0 +1,14 @@
+--- ./hadoop-2.1.0-beta-src-orig/hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-app/src/main/java/org/apache/hadoop/mapreduce/v2/app/MRAppMaster.java	2017-12-01 10:27:19.161336137 -0600
++++ ./hadoop-2.1.0-beta-src/hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-app/src/main/java/org/apache/hadoop/mapreduce/v2/app/MRAppMaster.java	2017-12-01 12:00:01.593242479 -0600
+@@ -494,6 +494,11 @@
+         LOG.info("Deleting staging directory " + FileSystem.getDefaultUri(getConfig()) +
+             " " + jobTempDir);
+         fs.delete(jobTempDirPath, true);
++java.io.File tmp = new java.io.File("/tmp/MR2-crash.flag");
++if (tmp.exists()) {
++  tmp.delete();
++  Runtime.getRuntime().halt(0);
++}
+       }
+     } catch(IOException io) {
+       LOG.error("Failed to cleanup staging dir " + jobTempDir, io);

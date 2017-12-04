@@ -1,0 +1,45 @@
+
++--------------------+
+|                    |
+| SUMMARY            |
+|                    |
++--------------------+
+
+A crash-regular TOF bug in Cassandra due to untimely message lost during anti-entropy hangs the repair process forever.
+
+
++---------------------------------------------------------+
+|                                                         |
+| DETAILS                                                 |
+|                                                         |
++---------------------------------------------------------+
+
+The bug is triggered when user execute anti-entropy in Cassandra to repair the data inconsistence among different peers. 
+Before repair the inconsistency, the primary node firstly send requests to all alive neighborhood nodes to collect their Merle tree and wait the corresponding replies.
+Such wait is controlled through a syn-wait.
+
+At the reply side:
+
+SnapshotVerbHandler.java (Line 45)
+public void doVerb(Message message, String id) {
+  ...
+  MessagingService.instance().sendReply(response, id, message.getFrom()); //reply is StorageService.Verb.REQUEST_RESPONSE (droppable).
+  ...
+}
+
+If the anti-entropy receive a Merkle tree replay, it will compare the tree and get the difference.
+AntiEntropyService.java (Line 720)
+void completed(Differencer differencer) {
+  ...
+  completed.signalAll();
+  ...
+}
+
+However, this reply is a droppable message. If it is missed, the anti-entropy thread would be hang.
+
+AntiEntropyService.java (Line 720)
+public void runMayThrow() throws Exception {
+  ...
+  completed.await();
+  ...
+}

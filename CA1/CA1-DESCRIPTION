@@ -1,0 +1,37 @@
+
++--------------------+
+|                    |
+| SUMMARY            |
+|                    |
++--------------------+
+
+A crash-regular TOF bug in Cassandra due to untimely node crash or message lost during anti-entropy hangs the repair process forever.
+
+
++---------------------------------------------------------+
+|                                                         |
+| DETAILS                                                 |
+|                                                         |
++---------------------------------------------------------+
+
+The bug is triggered when user execute anti-entropy in Cassandra to repair the data inconsistence among different peers. 
+Before repair the inconsistency, the primary node firstly send requests to all alive neighborhood nodes to collect their snapshot and wait the corresponding replies.
+Such wait is controlled through a syn-wait.
+
+AntiEntropyService.java (Line 907)
+void runMayThrow() {
+  ...
+  for (InetAddress endpoint : endpoints)
+    MessagingService.instance().sendRR(new SnapshotCommand(tablename, cfname, sessionName, false), endpoint, callback);
+  snapshotLatch.await();
+  ...
+}
+
+The anti-entropy thread will wait after sending all requests (sendRR in the code snippet). On the other side, when the node receive a corresponding reply, it checks the remaining and set the condition heap variable if all replies are received.
+
+AntiEntropyService.java (Line 903)
+public void response(Message msg) {
+  RepairJob.this.snapshotLatch.countDown();
+}
+
+If one reply is missed due to message lost along the network transmission, the anti-entropy will hang at that syn-wait and there is no timeout mechanism to exit.

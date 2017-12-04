@@ -1,0 +1,42 @@
+
++--------------------+
+|                    |
+| SUMMARY            |
+|                    |
++--------------------+
+
+A crash-recovery TOF bug can cause the re-launched task hang and eventually the job is failed due to untimely crash of reducer node during commitPending.
+
++---------------------------------------------------------+
+|                                                         |
+| DETAILS                                                 |
+|                                                         |
++---------------------------------------------------------+
+
+The MapReduce in hadoop uses a two phase commit protocol to handle a task attempt commit so that it can discard results from an unneeded task attempt.
+A task attempt calls commitPending() in AM to inform the application that it's ready to commit its results.
+
+TaskImpl.java (Line 725)
+public void transition(TaskImpl task, TaskEvent event) {
+  ...
+  if (task.commitAttempt == null) {
+    task.commitAttempt = attemptID;
+  }
+  ...
+}
+
+Suppose a task attempt has called commitPending() and set the task.commitAttempt to its ID.
+Then this task attempt crashes before commit finish. The MapReduce system has failure tolerant mechanism to re-launch a new task attempt.
+However, the re-launched task attempt will get approval from AM to commit.
+
+Task.java (Line 1110)
+private void commit(...) {
+  ...
+  while (!umbilical.canCommit(taskId)) {
+    try { Thread.sleep(1000); }
+  }
+  ...
+}
+
+Since the commitAttempt in AM is set by the crashed attempt, canCommit() RPC always returns false for the relaunched attempt.
+Thus, the re-launched attempt hangs and the submitted job cannot complete successfully.

@@ -1,0 +1,32 @@
+
++--------------------+
+|                    |
+| SUMMARY            |
+|                    |
++--------------------+
+
+A crash-recovery TOF bug in HBase, that regionserver crashes right after creating a znode as flag when it is transferring HLogs, and then the recovery will skip the transfer since the znode flag already exists.
+
++---------------------------------------------------------+
+|                                                         |
+| DETAILS                                                 |
+|                                                         |
++---------------------------------------------------------+
+
+This is a data-loss bug due to unexpected node crash. If the regionserver does not crash, the following transfer will finish successfully.
+But when the regionserver crashes right after creating a flag znode, the recovery will skip the transfer and produce data-loss problem.
+
+1) In crash part: ReplicationSourceManager.java (line 293)
+
+void transferQueues(string rsZnode){
+  if (lockOtherRS(rsZnode) == false) return; //create znode
+  //transfer
+  ...
+}
+
+
+When one regionserver transfers HLogs, it will create one lock (rsZnode) and copy HLogs to the newQueue. If the lock already exists, the regionserver will skip the transfer and return.
+
+In recovery part: same code as crash part
+
+The recovery routine tries to copy HLogs to the newQueue again. But it will skip and return if the regionserver crashes right after creating the znode lock.

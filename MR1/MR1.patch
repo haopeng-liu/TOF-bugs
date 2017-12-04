@@ -1,0 +1,30 @@
+--- ./hadoop-common-orig/hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-core/src/main/java/org/apache/hadoop/mapred/Task.java	2017-11-30 15:08:22.770506971 -0600
++++ ./hadoop-common/hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-core/src/main/java/org/apache/hadoop/mapred/Task.java	2017-11-30 16:04:39.686450112 -0600
+@@ -986,6 +986,11 @@
+           }
+         }
+       }
++java.io.File tmp = new java.io.File("/tmp/MR4-crash.flag");
++if (tmp.exists()) {
++  tmp.delete();
++  Runtime.getRuntime().halt(0);
++}
+       //wait for commit approval and commit
+       commit(umbilical, reporter, committer);
+     }
+@@ -1102,6 +1107,7 @@
+     int retries = MAX_RETRIES;
+     while (true) {
+       try {
++System.out.println("FCatch: enter canCommit-loop for attempt: " + TaskAttemptID);
+         while (!umbilical.canCommit(taskId)) {
+           try {
+             Thread.sleep(1000);
+@@ -1110,6 +1116,7 @@
+           }
+           reporter.setProgressFlag();
+         }
++System.out.println("FCatch: exit canCommit-loop for attempt: " + TaskAttemptID);
+         break;
+       } catch (IOException ie) {
+         LOG.warn("Failure asking whether task can commit: " + 

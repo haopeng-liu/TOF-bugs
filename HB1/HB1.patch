@@ -1,0 +1,41 @@
+--- ./hbase-orig/hbase-server/src/main/java/org/apache/hadoop/hbase/master/AssignmentManager.java	2017-12-02 13:32:15.259694526 -0600
++++ ./hbase/hbase-server/src/main/java/org/apache/hadoop/hbase/master/AssignmentManager.java	2017-12-02 19:10:14.000000000 -0600
+@@ -528,12 +528,15 @@
+     boolean intransistion = processRegionInTransition(hri.getEncodedName(), hri);
+     if (!intransistion) return intransistion;
+     LOG.debug("Waiting on " + HRegionInfo.prettyPrint(hri.getEncodedName()));
++LOG.debug("FCatch: enter the while-loop");
+     while (!this.server.isStopped() &&
+       this.regionStates.isRegionInTransition(hri.getEncodedName())) {
+       // We put a timeout because we may have the region getting in just between the test
+       //  and the waitForUpdate
+       this.regionStates.waitForUpdate(100);
++LOG.info("********************waitForMeta in infinite while loop **********************");
+     }
++LOG.debug("FCatch: exit the while-loop");
+     return intransistion;
+   }
+ 
+--- ./hbase-orig/hbase-server/src/main/java/org/apache/hadoop/hbase/regionserver/handler/OpenRegionHandler.java	2017-12-02 13:32:15.267694525 -0600
++++ ./hbase/hbase-server/src/main/java/org/apache/hadoop/hbase/regionserver/handler/OpenRegionHandler.java	2017-12-02 19:18:27.000000000 -0600
+@@ -161,7 +161,19 @@
+           this.rsServices.isStopping()) {
+         return;
+       }
+-
++if (region.getRegionNameAsString().indexOf("meta") != -1) {
++  LOG.info("********************hbase:meta is OPEING, so kill and restart HMaster...**********************");
++  try {
++    Process proc = Runtime.getRuntime().exec("/home/fcatch/HB1/kill-restart-HMaster.sh");
++    java.io.InputStream stdin = proc.getInputStream();
++    java.io.InputStreamReader isr = new java.io.InputStreamReader(stdin);
++    java.io.BufferedReader br = new java.io.BufferedReader(isr);
++    proc.waitFor();
++    String line = null;
++    while ( (line = br.readLine()) != null) LOG.info(line);
++   } catch (Exception e) { e.printStackTrace(); }
++}
++Runtime.getRuntime().halt(0);
+ 
+       if (!isRegionStillOpening() || !transitionToOpened(region)) {
+         // If we fail to transition to opened, it's because of one of two cases:

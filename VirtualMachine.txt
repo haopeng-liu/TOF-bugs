@@ -1,0 +1,9 @@
+1. Access the virtual machine with the following ssh command (password: !QAZ2wsx):
+# ssh -p2345 fcatch@toadette.cs.uchicago.edu
+
+In the home directory, each bug has a separate folder including source code, data and scripts to trigger.
+
+2. You can also download the VM image: http://toadette.cs.uchicago.edu:5678/fcatch.vdi
+Then create a virtual machine in VirtualBox with the image.
+Log into the virtual machine with user name "fcatch" and password "fcatch"
+

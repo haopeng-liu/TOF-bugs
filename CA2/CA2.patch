@@ -1,0 +1,11 @@
+--- ./cassandra-orig/src/java/org/apache/cassandra/service/SnapshotVerbHandler.java	2017-11-30 11:05:12.730752634 -0600
++++ ./cassandra/src/java/org/apache/cassandra/service/SnapshotVerbHandler.java	2017-11-30 11:20:58.066736717 -0600
+@@ -42,7 +42,7 @@
+             Message response = message.getReply(FBUtilities.getBroadcastAddress(), new byte[0], MessagingService.version_);
+             if (logger.isDebugEnabled())
+                 logger.debug("Sending response to snapshot request {} to {} ", command.snapshot_name, message.getFrom());
+-            MessagingService.instance().sendReply(response, id, message.getFrom());
++            //MessagingService.instance().sendReply(response, id, message.getFrom()); //reply is StorageService.Verb.REQUEST_RESPONSE (droppable).
+         }
+         catch (Exception ex)
+         {

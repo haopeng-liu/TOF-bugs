@@ -1,0 +1,14 @@
+--- ./trunk-orig/src/java/main/org/apache/zookeeper/server/quorum/Learner.java	2017-12-01 15:46:21.069013831 -0600
++++ ./trunk/src/java/main/org/apache/zookeeper/server/quorum/Learner.java	2017-12-01 16:43:03.084956549 -0600
+@@ -484,6 +484,11 @@
+                    }
+                    
+                     zk.takeSnapshot();
++java.io.File tmp = new java.io.File("/tmp/ZK-crash.flag");
++if (tmp.exists()) {
++  tmp.delete(); System.out.println("FCatch crash");
++  Runtime.getRuntime().halt(0);
++}
+                     self.setCurrentEpoch(newEpoch);
+                     snapshotTaken = true;
+                     writePacket(new QuorumPacket(Leader.ACK, newLeaderZxid, null, null), true);

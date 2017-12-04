@@ -1,0 +1,50 @@
+
++-----------------------------+
+|                             |
+| SUMMARY		      |
+|			      |
++-----------------------------+
+A crash-recovery TOF bug in ZooKeeper due to untimely crash during taking snapshot and updating the epoch file.
+
+
++-----------------------------+
+|                             |
+| HOW TO INSTALL	      |
+|			      |
++-----------------------------+
+
+1. Download zookeeper source: 
+----------------------
+# ~/ZK/buggy-code.sh
+
+2. Apply the patch
+----------------------
+# cd <zookeeper_src_dir>
+# patch -p1 i ZK.patch
+
+3. Compile
+----------------------
+# ant tar
+
+
++-----------------------------+
+|                             |
+| Reproduce the bug	      |
+|			      |
++-----------------------------+
+1. Run the triggering script
+----------------------
+# ./ZK-trigger.sh
+
+2. Check result
+----------------------
+a. Normally, the 3-node zookeeper system can start correctly and is ready to receive requests.
+If the bug is triggered, one zookeeper node cannot successfully launch.
+
+b. Check the ZK log:
+# find ~/ZK/exp/ -name "zookeeper.out" | xargs grep -A 3 "Unable to load database on disk"
+
+2017-12-01 17:20:17,083 [myid:1] - ERROR [main:QuorumPeer@673] - Unable to load database on disk
+java.io.IOException: The current epoch, 0, is older than the last zxid, 8589934592
+        at org.apache.zookeeper.server.quorum.QuorumPeer.loadDataBase(QuorumPeer.java:655)
+

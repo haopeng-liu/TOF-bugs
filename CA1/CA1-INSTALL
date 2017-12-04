@@ -1,0 +1,43 @@
+
++-----------------------------+
+|                             |
+| SUMMARY		      |
+|			      |
++-----------------------------+
+A crash-regular TOF bug in Cassandra due to untimely node crash or message lost during anti-entropy hangs the repair process forever.
+
+
++-----------------------------+
+|                             |
+| HOW TO INSTALL	      |
+|			      |
++-----------------------------+
+
+1. Download Cassandra source: 
+----------------------
+# ~/CA1/buggy-code.sh
+
+2. Apply the patch
+----------------------
+# cd <cassandra_src_dir>
+# patch -p1 i CA1.patch
+
+3. Compile
+----------------------
+# ant clean release
+
+
++-----------------------------+
+|                             |
+| Reproduce the bug	      |
+|			      |
++-----------------------------+
+1. Run the triggering script
+----------------------
+# ./CA1-trigger.sh
+
+2. Check result
+----------------------
+a. Normally, the triggering script can complete correctly, which executes anti-entropy and repairs the inconsistence.
+If the bug is triggered, the repair cannot make progress and get stuck.
+

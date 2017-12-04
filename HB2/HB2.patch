@@ -1,0 +1,10 @@
+--- ./hbase-0.90.1-orig/src/main/java/org/apache/hadoop/hbase/replication/regionserver/ReplicationSourceManager.java	2017-12-01 14:34:58.325085943 -0600
++++ ./hbase-1/src/main/java/org/apache/hadoop/hbase/replication/regionserver/ReplicationSourceManager.java	2017-12-02 20:07:58.051294751 -0600
+@@ -296,6 +296,7 @@
+       LOG.info("Not transferring queue since we are shutting down");
+       return;
+     }
++Runtime.getRuntime().halt(0);
+     if (!this.zkHelper.lockOtherRS(rsZnode)) {
+       return;
+     }

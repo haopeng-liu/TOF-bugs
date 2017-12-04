@@ -1,7 +1,0 @@
-1. Download the VM image: https://uchicagoedu-my.sharepoint.com/personal/haopliu_uchicago_edu/_layouts/15/guestaccess.aspx?docid=111243cca436d4d8792dd7b7924d0824a&authkey=Ae6Hcn29AKtZZWJr7T55RCg&e=eae7ffc10fd945b9870df38bd206fe1c
-
-2. Create a virtual machine with above image in VirtualBox
-
-3. Log in to the virtual machine with username: fcatch; password: fcatch
-
-4. In the home directory, each bug has an independent sub-directory including its documentation and the script to trigger.

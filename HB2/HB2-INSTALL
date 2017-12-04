@@ -1,0 +1,58 @@
+
++-----------------------------+
+|                             |
+| SUMMARY                     |
+|                             |
++-----------------------------+
+A crash-recovery TOF bug in HBase which results in data loss due to unexpected node crash.
+
+
++-----------------------------+
+|                             |
+| HOW TO INSTALL              |
+|                             |
++-----------------------------+
+
+1. Download hbase-0.90.1 source
+----------------------
+# tar zxvf hbase-0.90.1-orig-src.tar.gz
+
+2. Copy and Deploy two hbase clusters
+----------------------
+# mv hbase-0.90.1-orig-src hbase-1
+# cp -r hbase-1 hbase-2
+
+3. Configure hbase replication
+----------------------
+# cp hbase-config/conf-1/* hbase-1/conf/
+# cp hbase-config/conf-2/* hbase-2/conf/*
+
+4. Prepare data for observation
+----------------------
+# ./data/prepareData.sh
+Note: for simplicity, we have prepared data at first and stored them in ./data/data-1 and ./data/data-2.
+
+5. Apply the patch
+----------------------
+# cd hbase-1
+# patch -p1 -i HB2.patch
+
+6. Compile
+----------------------
+# hbase-1/compile.sh
+
+
++-----------------------------+
+|                             |
+| Reproduce the bug           |
+|                             |
++-----------------------------+
+1. Run the triggering script
+----------------------
+# ./HB2-trigger.sh
+
+2. Check result
+----------------------
+In the triggering script, it searches log files to find whether WAL queue has been successfully transferred or not.
+In the correct run, the queue is transferred to another region server.
+If the bug is triggered, the alive region server cannot take over the queue due to existing znode.

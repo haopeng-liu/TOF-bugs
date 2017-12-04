@@ -1,0 +1,44 @@
+
++--------------------+
+|                    |
+| SUMMARY            |
+|                    |
++--------------------+
+
+A crash-recovery TOF bug can cause the re-booted zookeeper node fails due to untimely crash during taking snapshot and updating the epoch file.
+
++---------------------------------------------------------+
+|                                                         |
+| DETAILS                                                 |
+|                                                         |
++---------------------------------------------------------+
+
+In Zookeeper, whenever a leader is elected, all followers and learners exchange information and synchronize with the leader.
+At the learner site, it takes snapshot and updates the epoch file.
+
+Learner.java (Line 486)
+protected void syncWithLeader(long newLeaderZxid) throws Exception {
+  ...
+  case Leader.NEWLEADER:
+    ...
+    zk.takeSnapshot();
+    self.setCurrentEpoch(newEpoch);
+    ...
+}
+
+If a zookeeper node crashes in the middle of taking snapshot and setting current epoch, the snapshot file has been update but the epoch file is stale.
+Then, when this node reboot the zookeeper service, it firstly load database from the disk.
+
+QuorumPeer.java (Line 635)
+private void loadDataBase() {
+  ...
+  currentEpoch = readLongFromFile(CURRENT_EPOCH_FILENAME);
+  if (epochOfZxid > currentEpoch) {
+    throw new IOException("The current epoch, " + ZxidUtils.zxidToString(currentEpoch) + ", is older than the last zxid, " + lastProcessedZxid);
+  }
+  ...
+}
+
+"epochOfZxid" is restored from the snapshot file and "currentEpoch" is from the epoch file. 
+The inconsistency between these two files throws that IOException and eventually halt the zookeeper service in this node.
+

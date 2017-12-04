@@ -1,0 +1,48 @@
+
++--------------------+
+|                    |
+| SUMMARY            |
+|                    |
++--------------------+
+
+A crash-regular TOF bug in HBase which causes HMaster to hang due to unexpected node crash.
+
+
++---------------------------------------------------------+
+|                                                         |
+| DETAILS                                                 |
+|                                                         |
++---------------------------------------------------------+
+
+This bug happens during the HMaster startup in HBase. 
+After assigning the Meta region to a live region server, HMaster suspends itself in a while-loop to check whether the Meta region is still in RIT(region in transaction).
+
+HMaster.java (Line 999)
+void assignMeta(MonitoredTask status) {
+  ...
+  boolean rit = this.assignmentManager.processRegionInTransitionAndBlockUntilAssigned(HRegionInfo.FIRST_META_REGIONINFO);
+  ...
+}
+
+AssignmentManager.java (Line 245)
+boolean processRegionInTransitionAndBlockUntilAssigned(final HRegionInfo hri) {
+  ...
+  this.regionsInTransition.wait();
+  while (!this.master.isStopped() &&
+    this.regionsInTransition.containsKey(hri.getEncodedName())) {
+    ...
+  }
+  ...
+}
+
+On the other side, after opening the Meta region, the region server sends a message to notify HMaster. In the message handler, HMaster checks the condition and send the notify to its main thread.
+
+AssignmentManager.java (Line 730)
+void regionOnline(...) {
+  ...
+  this.regionsInTransition.remove(regionInfo.getEncodedName());
+  ...
+}
+
+If such message/notification is lost due to network issue or the region server is crashed, the main thread of HMaster will hang in the while-loop and cannot start up as usual.
+

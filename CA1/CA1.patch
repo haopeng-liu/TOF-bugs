@@ -1,0 +1,12 @@
+--- ./cassandra-orig/src/java/org/apache/cassandra/service/AntiEntropyService.java	2017-11-30 10:59:12.854758694 -0600
++++ ./cassandra/src/java/org/apache/cassandra/service/AntiEntropyService.java	2017-11-30 12:00:28.450696805 -0600
+@@ -242,7 +242,8 @@
+             Message message = TreeResponseVerbHandler.makeVerb(local, validator);
+             if (!validator.request.endpoint.equals(FBUtilities.getBroadcastAddress()))
+                 logger.info(String.format("[repair #%s] Sending completed merkle tree to %s for %s", validator.request.sessionid, validator.request.endpoint, validator.request.cf));
+-            ms.sendOneWay(message, validator.request.endpoint);
++            //ms.sendOneWay(message, validator.request.endpoint);
++            throw new java.net.SocketException();
+         }
+         catch (Exception e)
+         {

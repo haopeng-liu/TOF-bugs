@@ -1,0 +1,50 @@
+
++-----------------------------+
+|                             |
+| SUMMARY                     |
+|                             |
++-----------------------------+
+A crash-regular TOF bug in HBase which causes HMaster hang due to unexpected node crash.
+
+
++-----------------------------+
+|                             |
+| HOW TO INSTALL              |
+|                             |
++-----------------------------+
+
+1. Download source code
+----------------------
+# ~/HB1/buggy-code.sh
+
+2. Apply the patch
+----------------------
+# cd <hbase_src_dir>
+# patch -p1 i HB1.patch
+
+3. Compile
+----------------------
+# ~/HB1/compile.sh
+
+
++-----------------------------+
+|                             |
+| Reproduce the bug           |
+|                             |
++-----------------------------+
+1. Run the triggering script
+----------------------
+# ./HB1-trigger.sh
+
+2. Check result
+----------------------
+In the correct run, the trigger script can finish correctly and the HBase system is ready.
+When the bug is triggered, the trigger script cannot finish.
+
+Check the log:
+# grep "FCatch" /home/fcatch/HB1/exp/hbase-0.96.1/logs/*
+
+There is only a enter record and no exit record:
+hbase-fcatch-master-ubuntu.log:2017-12-02 19:26:49,339 DEBUG [master:localhost:60000] master.AssignmentManager: FCatch: enter the while-loop
+
+This indicates the HMaster hangs at that corresponding while-loop.

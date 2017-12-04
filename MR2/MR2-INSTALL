@@ -1,0 +1,47 @@
+
++-----------------------------+
+|                             |
+| SUMMARY		      |
+|			      |
++-----------------------------+
+A crash-recovery TOF bug in MapReduce due to untimely crash after deleting the staging dir.
+
+
++-----------------------------+
+|                             |
+| HOW TO INSTALL	      |
+|			      |
++-----------------------------+
+
+1. Download hadoop source: 
+----------------------
+# wget https://archive.apache.org/dist/hadoop/common/hadoop-2.1.0-beta/hadoop-2.1.0-beta-src.tar.gz
+
+2. Apply the patch
+----------------------
+# cd <hadoop_src_dir>
+# patch -p1 i MR2.patch
+
+3. Compile
+----------------------
+# mvn package -Pdist -DskipTests=true -Dtar -Dmaven.javadoc.skip=true
+
+
++-----------------------------+
+|                             |
+| Reproduce the bug	      |
+|			      |
++-----------------------------+
+1. Run the triggering script
+----------------------
+# ./MR2-trigger.sh
+
+2. Check result
+----------------------
+Check the re-launched AM log (syslog) with command: 
+# grep -r -A 3 "Error starting MRAppMaster"
+
+2017-12-01 12:04:24,109 FATAL [main] org.apache.hadoop.mapreduce.v2.app.MRAppMaster: Error starting MRAppMaster
+org.apache.hadoop.yarn.exceptions.YarnRuntimeException: java.io.FileNotFoundException: File does not exist: hdfs://localhost:10000/tmp/hadoop-yarn/staging/fcatch/.staging/job_1512151419824_0001/job.splitmetainfo
+        at org.apache.hadoop.mapreduce.v2.app.job.impl.JobImpl$InitTransition.createSplits(JobImpl.java:1469)
+

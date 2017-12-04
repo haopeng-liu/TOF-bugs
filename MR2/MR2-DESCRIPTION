@@ -1,0 +1,29 @@
+
++--------------------+
+|                    |
+| SUMMARY            |
+|                    |
++--------------------+
+
+A crash-recovery TOF bug can cause the re-launched ApplicationManager (AM) to be terminated and eventually the job is failed due to untimely crash of node after deleting the staging directory.
+
++---------------------------------------------------------+
+|                                                         |
+| DETAILS                                                 |
+|                                                         |
++---------------------------------------------------------+
+
+The MapReduce in hadoop creates a staging directory for each job to store temporary results and executing phases.
+For a submitted job, the AM firstly deletes the staging directory and then unregisters to inform RM.
+
+MRAppMaster.java (Line 496)
+public void cleanupStagingDir() throws IOException {
+  ...
+  LOG.info("Deleting staging directory " + FileSystem.getDefaultUri(getConfig()) + " " + jobTempDir);
+  fs.delete(jobTempDirPath, true);
+  ...
+}
+
+If the AM crashes after the deleting, RM will re-launch a new AM to retry the job.
+However, since there is not staging directory, the re-launched AM fails again.
+
